@@ -3,39 +3,26 @@ import plotly.express as px
 import pandas as pd
 
 def apply_adaptive_ui(color, load_score):
-    """
-    背景色の変化を「激変」させるためのグラデーション・エンジン。
-    """
+    """背景の変化を激変させるグラデーション・エンジン"""
     is_heavy = load_score > 100
     blur = "0px" if is_heavy else "15px"
     
     st.markdown(f"""
         <style>
-        /* 背景を単なる色ではなく、選択色から黒への強烈なグラデーションに変更 */
         .stApp {{ 
             background: linear-gradient(135deg, {color} 0%, #000000 100%) !important;
             background-attachment: fixed;
         }}
-        
-        /* 文字の可読性を極限まで高める（強力なアウトラインと影） */
         p, span, label, h1, h2, h3, li, .stMarkdown {{
             color: #ffffff !important;
-            text-shadow: 
-                2px 2px 4px #000000, 
-                -1px -1px 0 #000000, 
-                1px -1px 0 #000000, 
-                -1px 1px 0 #000000, 
-                1px 1px 0 #000000 !important;
+            text-shadow: 2px 2px 4px #000000, 1px 1px 0 #000000 !important;
         }}
-        
-        /* メインカードの枠線をユーザーの色で発光させる */
         .main-card {{
             background: rgba(0,0,0, 0.65);
             backdrop-filter: blur({blur});
             border: 2px solid {color} !important; 
-            border-radius: 20px; 
-            padding: 25px;
-            box-shadow: 0 0 25px {color}66; /* 40%程度の透明度で発光 */
+            border-radius: 20px; padding: 25px;
+            box-shadow: 0 0 25px {color}66;
             margin-bottom: 20px;
         }}
         </style>
@@ -44,28 +31,45 @@ def apply_adaptive_ui(color, load_score):
 
 def render_chart(scores, color):
     """
-    直感的な多角形レーダーチャート。
-    main.pyから呼び出される名前を 'render_chart' に完全固定。
+    データの異常を自動修正する堅牢なレーダーチャート。
     """
     try:
-        # データ構築
+        # 1. データのバリデーション（空や異常値を防ぐ）
+        if not scores or not isinstance(scores, dict):
+            st.warning("性格データがまだ生成されていません。")
+            return
+
+        # 数値が文字列になっていたり、Noneだったりする場合に備えて安全に変換
+        safe_scores = {}
+        traits = ["開放性", "誠実性", "外向性", "協調性", "情緒安定性"]
+        for t in traits:
+            val = scores.get(t, 50) # データがない場合は中央値の50をセット
+            try:
+                safe_scores[t] = float(val)
+            except:
+                safe_scores[t] = 50.0
+
+        # 2. Plotly用データ作成
         df = pd.DataFrame(dict(
-            r=list(scores.values()),
-            theta=list(scores.keys())
+            r=list(safe_scores.values()),
+            theta=list(safe_scores.keys())
         ))
         
-        # グラフを閉じるための末尾追加
-        df_closed = pd.concat([df, df.iloc[[0]]], ignore_index=True)
-        
-        # 描画設定
-        fig = px.line_polar(df_closed, r='r', theta='theta', line_close=True)
+        # 3. 描画（エラー回避のためにシンプルなpx.line_polarを使用）
+        fig = px.line_polar(
+            df, 
+            r='r', 
+            theta='theta', 
+            line_close=True,
+            range_r=[0, 100] # グラフの範囲を0-100に固定
+        )
         
         fig.update_traces(
             fill='toself', 
             line_color=color, 
             line_width=4,
-            fillcolor="rgba(255, 255, 255, 0.25)", # 内部は少し白く透かす
-            markers=True # 頂点を強調して扱いやすくする
+            fillcolor="rgba(255, 255, 255, 0.2)",
+            markers=True
         )
         
         fig.update_layout(
@@ -73,23 +77,15 @@ def render_chart(scores, color):
             plot_bgcolor='rgba(0,0,0,0)',
             polar=dict(
                 bgcolor='rgba(0,0,0,0.2)',
-                radialaxis=dict(
-                    visible=True, 
-                    range=[0, 100], 
-                    gridcolor="rgba(255,255,255,0.2)",
-                    tickfont=dict(color="white")
-                ),
-                angularaxis=dict(
-                    color="white", 
-                    font=dict(size=14, weight="bold"),
-                    gridcolor="rgba(255,255,255,0.2)"
-                )
+                radialaxis=dict(visible=True, gridcolor="rgba(255,255,255,0.2)"),
+                angularaxis=dict(color="white", font=dict(size=12))
             ),
-            showlegend=False,
-            margin=dict(l=40, r=40, t=40, b=40)
+            showlegend=False
         )
         
         st.plotly_chart(fig, use_container_width=True)
         
     except Exception as e:
-        st.error("分析チャートの描画中にエラーが発生しました。")
+        st.error(f"グラフ描画システムを再起動中... (Error: {str(e)})")
+        # 最悪の場合、表形式でデータを出す（プロの予備プラン）
+        st.table(pd.DataFrame([scores]))
