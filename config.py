@@ -1,4 +1,3 @@
-# config.py
 import datetime
 
 class Config:
@@ -16,27 +15,18 @@ class Config:
         "placeholder": "論理の検察官にメッセージを送信...",
         "new_chat": "＋ 新規チャット",
         "history": "🕒 会話履歴",
-        "sync_setting": "⚙️ 性格の自動修正",
-        "analysis_chart": "📊 自己分析チャート",
+        "sync_setting": "⚙️ 性格の動的修正",
+        "analysis_chart": "📊 ニューラル・パルサー（新世代グラフ）",
         "next_btn": "回答を確定して次へ"
     }
 
     @staticmethod
     def get_adaptive_color(base_hex):
-        """
-        グラフエラー回避版：
-        デザイン用の複雑な色(mix)と、グラフ用の純粋な色(pure)を両方返す
-        """
         hour = datetime.datetime.now().hour
-        is_dark = 18 <= hour or hour < 5
-        
-        # グラフ用の純粋な色（エラー防止）
         pure_color = base_hex 
-        
-        # CSSデザイン用の装飾色
-        if is_dark:
-            design_color = f"color-mix(in srgb, {base_hex}, black 60%)"
+        # 夜間(18-5時)はアイケア・アンバーを20%ブレンド
+        if 18 <= hour or hour < 5:
+            design_color = f"color-mix(in srgb, {base_hex}, #ffaa00 20%, black 70%)"
         else:
-            design_color = base_hex
-            
+            design_color = f"color-mix(in srgb, {base_hex}, #fff5e6 10%, black 40%)"
         return design_color, pure_color
