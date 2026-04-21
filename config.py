@@ -1,6 +1,7 @@
 import datetime
 
 class Config:
+    # 質問データは維持（省略）
     QUESTIONS = [
         ("開放性", "新しいアイデアや概念を考えるのが好きだ"), ("開放性", "芸術的な活動に強い関心がある"), ("開放性", "想像力が豊かだ"),
         ("誠実性", "物事を効率よく丁寧に進められる"), ("誠実性", "計画を最後までやり遂げる"), ("誠実性", "細かいミスにも気づく"),
@@ -11,22 +12,24 @@ class Config:
 
     STRINGS = {
         "welcome": "🛡️ Quantum Evidence Pro",
-        "oracle_msg": "💡 AIからの先読み提案（思考の種）",
-        "placeholder": "論理の検察官にメッセージを送信...",
+        "oracle_msg": "💡 AIからの先読み提案",
+        "placeholder": "メッセージを送信...",
         "new_chat": "＋ 新規チャット",
         "history": "🕒 会話履歴",
-        "sync_setting": "⚙️ 性格の動的修正",
-        "analysis_chart": "📊 ニューラル・パルサー（新世代グラフ）",
-        "next_btn": "回答を確定して次へ"
+        "sync_setting": "⚙️ 性格の修正",
+        "analysis_chart": "📊 性格分析（リアルタイム）",
+        "next_btn": "確定して次へ"
     }
 
     @staticmethod
     def get_adaptive_color(base_hex):
+        """変化がはっきりわかるように色の配合を100%以上に強化"""
         hour = datetime.datetime.now().hour
-        pure_color = base_hex 
-        # 夜間(18-5時)はアイケア・アンバーを20%ブレンド
+        # 夜間はベース色を濃くし、昼間は明るさを強調
         if 18 <= hour or hour < 5:
-            design_color = f"color-mix(in srgb, {base_hex}, #ffaa00 20%, black 70%)"
+            # 黒との配合を強めて重厚に
+            design_color = f"color-mix(in srgb, {base_hex}, #000000 80%)"
         else:
-            design_color = f"color-mix(in srgb, {base_hex}, #fff5e6 10%, black 40%)"
-        return design_color, pure_color
+            # 白との配合を強めて鮮やかに
+            design_color = f"color-mix(in srgb, {base_hex}, #ffffff 20%)"
+        return design_color, base_hex
